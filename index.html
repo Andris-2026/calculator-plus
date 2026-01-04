@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator Plus - A. Krastiņš</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #d5dde5 100%);
+            --container-bg: rgba(255, 255, 255, 0.25);
+            --border-color: rgba(255, 255, 255, 0.4);
+            --text-main: #333;
+            --text-dim: #888;
+            --btn-bg: rgba(255, 255, 255, 0.4);
+            --btn-hover: rgba(255, 255, 255, 0.7);
+            --progress-color: rgba(0, 0, 0, 0.15);
+            --history-color: #333;
+            --scrollbar-thumb: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --container-bg: rgba(0, 0, 0, 0.4);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+            --btn-bg: rgba(255, 255, 255, 0.05);
+            --btn-hover: rgba(255, 255, 255, 0.15);
+            --progress-color: #38bdf8;
+            --history-color: #f8fafc;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-gradient);
+            transition: background 0.5s ease;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        /* --- VĒSTURE --- */
+        .background-history {
+            position: absolute;
+            right: calc(50% + 350px); 
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: right;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 15px;
+            scrollbar-gutter: stable;
+        }
+
+        .background-history::-webkit-scrollbar { width: 4px; }
+        .background-history::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
+        .history-item {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--history-color);
+            animation: slideIn 0.4s ease-out forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 0.3; transform: translateX(0); }
+        }
+
+        /* --- GALVENAIS BLOKS --- */
+        .container {
+            position: relative;
+            background: var(--container-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            padding: 40px;
+            width: 620px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+
+        .display-section { flex: 1; text-align: left; position: relative; }
+        #total-display { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase; }
+        #input-display { width: 100%; font-size: 4rem; border: none; background: transparent; color: var(--text-main); outline: none; font-weight: 300; }
+
+        .progress-container { width: 100%; height: 2px; background: rgba(0, 0, 0, 0.05); margin-top: 5px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--progress-color); transition: width linear; }
+
+        /* --- CIPARU REŽĢIS --- */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .num-btn { 
+            height: 65px; 
+            width: 65px; 
+            border-radius: 50%; 
+            border: none; 
+            background: var(--btn-bg); 
+            font-size: 1.3rem; 
+            color: var(--text-main); 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .num-btn:hover { background: var(--btn-hover); transform: translateY(-2px); }
+
+        /* --- APAKŠĒJĀS POGAS --- */
+        .controls { position: absolute; bottom: 30px; left: 25px; display: flex; gap: 10px; }
+        .icon-btn { background: transparent; border: 1px solid var(--border-color); border-radius: 8px; width: 35px; height: 35px; color: var(--text-main); opacity: 0.4; cursor: pointer; transition: opacity 0.3s; }
+        .icon-btn:hover { opacity: 0.8; }
+
+        /* --- NODZĒST VISU TEKSTS --- */
+        .clear-btn { 
+            background: none !important; 
+            border: none !important; 
+            box-shadow: none !important;
+            color: var(--text-dim); 
+            cursor: pointer; 
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-top: 15px; 
+            padding: 0;
+            white-space: nowrap; /* Vienā rindā */
+            transition: color 0.3s;
+        }
+        .clear-btn:hover { color: var(--text-main); transform: none !important; }
+
+        /* --- COPYRIGHT --- */
+        .copyright {
+            margin-top: 35px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            opacity: 0.7;
+            letter-spacing: 1px;
+            transition: color 0.5s ease;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<div class="background-history" id="history-list"></div>
+
+<div class="container" id="box">
+    <div class="controls">
+        <button class="icon-btn" id="sound-btn" onclick="toggleSound()" title="Skaņa">🔊</button>
+        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Tēma">🌙</button>
+    </div>
+
+    <div class="display-section">
+        <div id="total-display">Kopā: 0</div>
+        <input type="text" id="input-display" value="" placeholder="0" disabled>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <button class="clear-btn" onclick="fullReset()">Nodzēst visu (Esc)</button>
+    </div>
+
+    <div class="grid">
+        <button class="num-btn" onclick="press('1')">1</button>
+        <button class="num-btn" onclick="press('2')">2</button>
+        <button class="num-btn" onclick="press('3')">3</button>
+        <button class="num-btn" onclick="press('4')">4</button>
+        <button class="num-btn" onclick="press('5')">5</button>
+        <button class="num-btn" onclick="press('6')">6</button>
+        <button class="num-btn" onclick="press('7')">7</button>
+        <button class="num-btn" onclick="press('8')">8</button>
+        <button class="num-btn" onclick="press('9')">9</button>
+        <button class="num-btn" onclick="press('.')">,</button>
+        <button class="num-btn" onclick="press('0')">0</button>
+        <button class="num-btn" onclick="backspace()"><</button>
+    </div>
+</div>
+
+<div class="copyright">
+    Calculator Plus ©, A.Krastiņš
+</div>
+
+<script>
+    let currentInput = ""; let total = 0; let timer = null; let isSoundEnabled = true; let history = [];
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, duration, type = 'sine', volume = 0.1) {
+        if (!isSoundEnabled) return;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = type; oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+        oscillator.start(); oscillator.stop(audioCtx.currentTime + duration);
+    }
+
+    function toggleSound() { isSoundEnabled = !isSoundEnabled; document.getElementById('sound-btn').innerText = isSoundEnabled ? "🔊" : "🔇"; }
+    
+    function toggleTheme() {
+        const body = document.body;
+        const themeBtn = document.getElementById('theme-btn');
+        if (body.getAttribute('data-theme') === 'light') {
+            body.setAttribute('data-theme', 'dark');
+            themeBtn.innerText = "☀️";
+        } else {
+            body.setAttribute('data-theme', 'light');
+            themeBtn.innerText = "🌙";
+        }
+    }
+
+    const inputDisp = document.getElementById('input-display');
+    const totalDisp = document.getElementById('total-display');
+    const progressBar = document.getElementById('progress-bar');
+    const historyList = document.getElementById('history-list');
+
+    document.addEventListener('keydown', (e) => {
+        if (/[0-9]/.test(e.key)) press(e.key);
+        else if (e.key === '.' || e.key === ',') press('.');
+        else if (e.key === 'Backspace') backspace();
+        else if (e.key === 'Escape') fullReset();
+    });
+
+    function press(val) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        playTone(600, 0.1, 'sine', 0.05); resetTimerState();
+        if (val === '.' && currentInput.includes('.')) return;
+        if (val === '.' && currentInput === "") currentInput = "0";
+        currentInput += val; updateUI(); startTimer(false);
+    }
+
+    function backspace() {
+        playTone(400, 0.1, 'sine', 0.05); resetTimerState();
+        currentInput = currentInput.slice(0, -1); updateUI();
+        if (currentInput !== "") startTimer(true);
+    }
+
+    function resetTimerState() { clearTimeout(timer); progressBar.style.transition = 'none'; progressBar.style.width = '0%'; }
+
+    function startTimer(isBack) {
+        let wait = isBack ? 5000 : (currentInput.includes('.') ? 4000 : 2000);
+        setTimeout(() => { progressBar.style.transition = `width ${wait}ms linear`; progressBar.style.width = '100%'; }, 10);
+        timer = setTimeout(addAutomatically, wait);
+    }
+
+    function updateUI() { inputDisp.value = currentInput.replace('.', ','); }
+
+    function addAutomatically() {
+        if (currentInput !== "" && currentInput !== "." && currentInput !== "0.") {
+            playTone(800, 0.2, 'sine', 0.03);
+            let val = parseFloat(currentInput); total += val;
+            updateHistory(val);
+            totalDisp.innerText = "Kopā: " + Number(total.toFixed(10)).toString().replace('.', ',');
+            currentInput = ""; inputDisp.value = ""; resetTimerState();
+        }
+    }
+
+    function updateHistory(val) {
+        history.unshift(val.toString().replace('.', ','));
+        historyList.innerHTML = history.map((item, i) => {
+            let op = i < 5 ? Math.max(0.6 - (i * 0.1), 0.2) : 0.15;
+            return `<div class="history-item" style="opacity: ${op}">+ ${item}</div>`;
+        }).join('');
+        historyList.scrollTop = 0;
+    }
+
+    function fullReset() {
+        playTone(300, 0.3, 'triangle', 0.05); resetTimerState();
+        total = 0; currentInput = ""; history = [];
+        inputDisp.value = ""; totalDisp.innerText = "Kopā: 0"; historyList.innerHTML = "";
+    }
+</script>
+</body>
+</html>
