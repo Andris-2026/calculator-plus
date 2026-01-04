@@ -61,7 +61,6 @@
             overflow-y: auto;
             padding-right: 15px;
             scrollbar-gutter: stable;
-            transition: all 0.3s ease;
         }
 
         .background-history::-webkit-scrollbar { width: 4px; }
@@ -80,7 +79,7 @@
             to { opacity: 0.3; transform: translateX(0); }
         }
 
-        /* --- GALVENAIS KONTEINERS --- */
+        /* --- KONTEINERS --- */
         .container {
             position: relative;
             background: var(--container-bg);
@@ -89,19 +88,19 @@
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 40px;
+            padding-bottom: 70px; /* Papildu vieta apakšējām pogām */
             width: 100%;
-            max-width: 600px; /* Maksimālais platums uz datora */
+            max-width: 600px;
             display: flex;
             align-items: center;
             gap: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             z-index: 2;
             box-sizing: border-box;
-            transition: all 0.3s ease;
         }
 
         .display-section { flex: 1; text-align: left; position: relative; min-width: 0; }
-        #total-display { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+        #total-display { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase; }
         #input-display { width: 100%; font-size: 3.5rem; border: none; background: transparent; color: var(--text-main); outline: none; font-weight: 300; }
 
         .progress-container { width: 100%; height: 2px; background: rgba(0, 0, 0, 0.05); margin-top: 5px; overflow: hidden; }
@@ -109,55 +108,56 @@
 
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .num-btn { 
-            height: 60px; 
-            width: 60px; 
-            border-radius: 50%; 
-            border: none; 
-            background: var(--btn-bg); 
-            font-size: 1.2rem; 
-            color: var(--text-main); 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            height: 60px; width: 60px; border-radius: 50%; border: none; 
+            background: var(--btn-bg); font-size: 1.2rem; color: var(--text-main); 
+            cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; 
         }
         .num-btn:hover { background: var(--btn-hover); transform: translateY(-2px); }
 
-        .controls { position: absolute; bottom: 20px; left: 25px; display: flex; gap: 8px; }
-        .icon-btn { background: transparent; border: 1px solid var(--border-color); border-radius: 8px; width: 32px; height: 32px; color: var(--text-main); opacity: 0.4; cursor: pointer; }
+        /* --- STABILAS APŠĒJĀS POGAS --- */
+        .controls { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 40px; 
+            display: flex; 
+            gap: 12px; 
+            z-index: 10;
+        }
+        .icon-btn { 
+            background: transparent; 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            width: 36px; 
+            height: 36px; 
+            color: var(--text-main); 
+            opacity: 0.4; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s; 
+        }
+        .icon-btn:hover { opacity: 0.8; }
 
-        .clear-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; padding: 0; white-space: nowrap; }
+        .clear-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; padding: 0; }
 
         .copyright { margin-top: 30px; font-size: 0.7rem; color: var(--text-dim); opacity: 0.7; letter-spacing: 1px; text-align: center; }
 
-        /* --- MOBILĀS PIELĀGOŠANAS (RESPONSIVE) --- */
-        @media (max-width: 900px) {
+        /* --- RESPONSIVE --- */
+        @media (max-width: 950px) {
             .background-history {
-                right: auto;
-                left: 20px;
-                top: 20px;
-                transform: none;
-                max-height: 15vh;
-                text-align: left;
-                width: calc(100% - 40px);
+                right: auto; left: 20px; top: 20px; transform: none; 
+                max-height: 12vh; width: calc(100% - 40px); text-align: left;
             }
-            .history-item { font-size: 0.9rem; }
         }
 
         @media (max-width: 650px) {
-            .container {
-                flex-direction: column;
-                padding: 30px 20px;
-                gap: 20px;
-                border-radius: 30px;
-                margin-top: 80px; /* Atstarpe no vēstures augšā */
+            .container { 
+                flex-direction: column; padding: 30px 20px 80px 20px; gap: 20px; border-radius: 30px; margin-top: 80px; 
             }
             .display-section { width: 100%; text-align: center; }
             #input-display { font-size: 2.8rem; text-align: center; }
-            .grid { gap: 10px; }
-            .num-btn { height: 55px; width: 55px; }
-            .controls { position: relative; bottom: 0; left: 0; justify-content: center; margin-top: 10px; }
+            .controls { left: 0; right: 0; justify-content: center; bottom: 25px; }
         }
     </style>
 </head>
@@ -173,11 +173,6 @@
             <div id="progress-bar"></div>
         </div>
         <button class="clear-btn" onclick="fullReset()">Nodzēst visu (Esc)</button>
-        
-        <div class="controls">
-            <button class="icon-btn" id="sound-btn" onclick="toggleSound()">🔊</button>
-            <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
-        </div>
     </div>
 
     <div class="grid">
@@ -193,6 +188,11 @@
         <button class="num-btn" onclick="press('.')">,</button>
         <button class="num-btn" onclick="press('0')">0</button>
         <button class="num-btn" onclick="backspace()"><</button>
+    </div>
+
+    <div class="controls">
+        <button class="icon-btn" id="sound-btn" onclick="toggleSound()">🔊</button>
+        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
     </div>
 </div>
 
